@@ -1,0 +1,96 @@
+네이버 클라우드 플랫폼 Maps 활용 방법
+https://www.ncloud.com/
+회원가입 하기
+네이버 클라우드
+id: 
+pw: 
+
+콘솔 클릭 
+콘솔 시작하기 클릭
+왼쪽 카테고리에 products&Services 클릭
+오른쪽 Ai-Naver-Api 클릭
+Application 등록 클릭
+Application 이름 등록(자신의 서버 이름)
+
+제가
+배운거는 
+Clova에 
+Clova Speech Recognition(CSR)
+Clova Voice - Premium(요금이 청구됨)
+클릭
+
+Maps에
+Web Dynamic Map(주로 맵활용 할때 쓰임)
+Static Map
+Geocoding(주로 맵활용 할때 쓰임)
+Reverse Geocoding
+클릭
+
+맵만 활용 하실 분은
+Web Dynamic Map과 Geocoding만 쓰면 됩니다.
+
+그리고 맨 밑에 서버스 환경 등록에
+Web 서비스 URL(최대 10개)
+본인의 로컬 Home주소를 등록 하면 된다.
+
+ex)http://127.0.0.0:9090/local/
+ex)http://localhost:9090/local/
+
+그리고 등록을 누르면 등록이된다.
+그러면 서버이름과 인증정보 변경이 나온다.
+개발가이드를 보면 자세한 설명 사항도 볼 수 있다.
+여기서
+인증정보정보 키 표시를 누르면
+Application 이름과
+Client ID
+Client Secret 이 나온다
+그리고 밑에 서비스 환경에 보면 자신이 등록한 URL을 볼 수 있다
+
+여기서 Client ID와 Client Secret은 따로 메모장에 복사해둔다 JavaScript나 Java파일에 꼭 필요하다
+
+맵을  사용할때 필요한 코드
+맵을 사용할 자바 파일에 추가
+@Override
+	public String geocode(String words) {
+		StringBuffer res = null;
+		String clientId = "ClientID"; //이부분이 메모장에 저장한 ClientID 넣을 부분
+		String clientSecret = "Client Secret"; //이부분이 메모장에 저장한 Client Secret 넣을 부분
+		try {
+			String text = URLEncoder.encode(words, "UTF-8");
+			String apiURL = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" + text;
+			URL url = new URL(apiURL);
+			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			con.setRequestProperty("X-NCP-APIGW-API-KEY-ID", clientId);
+			con.setRequestProperty("X-NCP-APIGW-API-KEY", clientSecret);
+			con.setDoOutput(true);
+
+			int responseCode = con.getResponseCode();
+			BufferedReader br;
+			if (responseCode == 200) {
+				br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			} else {
+				br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			}
+			String inputLine;
+			res = new StringBuffer();
+			while ((inputLine = br.readLine()) != null) {
+				res.append(inputLine);
+			}
+			br.close();
+			// System.out.println("service " + res.toString());
+		} catch (Exception e) {
+			// System.out.println(e);
+		}
+
+		return res.toString();
+	}
+
+
+Jsp 파일에도 사용할 부분(저는 Jsp 2군데 사용해서 이렇게 2번 사용했습니다.)
+<script type="text/javascript"
+	src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=자신의 클라이언트 아이디 자리"></script>
+
+<script type="text/javascript"
+	src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=자신의 클라이언트 아이디 자리"></script>
+
+부분만 고쳐 주면됨
