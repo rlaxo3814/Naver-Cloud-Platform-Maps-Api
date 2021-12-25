@@ -50,6 +50,40 @@ Client Secret 이 나온다
 
 맵을  사용할때 필요한 코드
 맵을 사용할 자바 파일에 추가
+
+1.ProjectController
+
+public interface ProjectController {
+public void getGeo(HttpServletRequest req, HttpServletResponse res) throws IOException;
+}
+
+2.ProjectControllerImpl
+
+@Controller("projectController")
+public class ProjectControllerImpl implements ProjectController {
+
+	@Override
+	@ResponseBody
+	@RequestMapping(value = "/map", method = RequestMethod.GET, produces = "application/text; charset=UTF-8")
+	public void getGeo(HttpServletRequest req, HttpServletResponse res) throws IOException {
+		req.setCharacterEncoding("utf-8");
+		String addr = req.getParameter("addr");
+		res.setContentType("text/text; charset=utf-8");
+		String result = projectService.geocode(addr);
+		res.getWriter().print(result);
+	}
+}
+
+3.ProjectService
+
+public interface ProjectService {
+public String geocode(String words);
+}
+
+4.ProjectServiceImpl
+
+@Service("projectService")
+public class ProjectServiceImpl implements ProjectService {
 @Override
 	public String geocode(String words) {
 		StringBuffer res = null;
@@ -84,13 +118,132 @@ Client Secret 이 나온다
 
 		return res.toString();
 	}
+}
+
+5.ProjectVo
+
+@Component("projectVO")
+public class ProjectVO {
+private String map;
+public ProjectVO() {
+}
+public ProjectVO(String map){
+this.map = map;
+}
+
+	public String getMap() {
+		return map;
+	}
+
+	public void setMap(String map) {
+		this.map = map;
+	}
+}
 
 
-Jsp 파일에도 사용할 부분(저는 Jsp 2군데 사용해서 이렇게 2번 사용했습니다.)
+6.ProjectInfo.jsp
+
 <script type="text/javascript"
 	src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=자신의 클라이언트 아이디 자리"></script>
+$.ajax({
+			type : "get",
+			url : "/server.xml(Context Path=이름)/map",
+			contentType : "application/json",
+			data : {
+				"addr" : $("#addr").val()
+			},
+			success : function(data, textStatus) {
+				resultText = JSON.parse(data);
+				var lang1 = resultText.addresses[0].x;
+				var lat1 = resultText.addresses[0].y;
+				var mapOptions = {
+					center : new naver.maps.LatLng(lat1, lang1),
+					zoom : 15
+				};
+				var map = new naver.maps.Map('map', mapOptions);
+				var marker = new naver.maps.Marker({
+					position : new naver.maps.LatLng(lat1, lang1),
+					map : map
+				});
+			},
+			error : function(data, textStatus) {
+				alert("에러가! 발생했습니다.");
+			},
+			complete : function(data, textStatus) {
+
+			}
+		});
+
+		$('#sendMark').click(function() {
+			event.preventDefault();
+			$.ajax({
+				type : "get",
+				url : "/server.xml(Context Path=이름)/map",
+				contentType : "application/json",
+				data : {
+					"addr" : $("#addr").val()
+				},
+				success : function(data, textStatus) {
+					resultText = JSON.parse(data);
+					var lang1 = resultText.addresses[0].x;
+					var lat1 = resultText.addresses[0].y;
+					var mapOptions = {
+						center : new naver.maps.LatLng(lat1, lang1),
+						zoom : 15
+					};
+					var map = new naver.maps.Map('map', mapOptions);
+					var marker = new naver.maps.Marker({
+						position : new naver.maps.LatLng(lat1, lang1),
+						map : map
+					});
+				},
+				error : function(data, textStatus) {
+					alert("에러가! 발생했습니다.");
+				},
+				complete : function(data, textStatus) {
+				}
+			});
+		});
+	});
+
+7.ProjectWriteForm.jsp
 
 <script type="text/javascript"
 	src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=자신의 클라이언트 아이디 자리"></script>
+$(document).ready(function() {
+		$('#map').hide();
+		// 맵 geoCode
+		$('#sendMark').click(function() {
+			$('#map').show();
+			event.preventDefault();
+			$.ajax({
+				type : "get",
+				url : "/server.xml(Context Path=이름)/map",
+				contentType : "application/json",
+				data : {
+					"addr" : $("#addr").val()
+				},
+				success : function(data, textStatus) {
+					resultText = JSON.parse(data);
+					var lang1 = resultText.addresses[0].x;
+					var lat1 = resultText.addresses[0].y;
+					var mapOptions = {
+						center : new naver.maps.LatLng(lat1, lang1),
+						zoom : 15
+					};
+					var map = new naver.maps.Map('map', mapOptions);
+					var marker = new naver.maps.Marker({
+						position : new naver.maps.LatLng(lat1, lang1),
+						map : map
+					});
+				},
+				error : function(data, textStatus) {
+					alert("에러가! 발생했습니다.");
+				},
+				complete : function(data, textStatus) {
+				}
+			});
+		});
+	});
 
-부분만 고쳐 주면됨
+끝.
